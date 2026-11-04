@@ -362,7 +362,7 @@ legend{float:left; width:100%; padding:0; font-size:13px; font-weight:600; color
       <div class="tagline">班味是有价的，每一秒都在给自己攒</div>
     </div>
     <div class="profile">
-      <span id="profileText">月薪 ¥12,000 · 09:00–18:00 · 双休</span>
+      <span id="profileText">月薪 ¥8,000 · 09:00–18:00 · 双休</span>
       <button class="badge" id="exampleBadge" type="button" title="点这里填你自己的工资">示例工资</button>
       <span class="rank" id="rankBadge"></span>
       <button class="btn" id="btnSettings" type="button">⚙︎ 设置</button>
@@ -371,7 +371,7 @@ legend{float:left; width:100%; padding:0; font-size:13px; font-weight:600; color
 
   <section class="onboard" id="onboard" aria-label="开始使用" hidden>
     <div class="ob-e" aria-hidden="true">👋</div>
-    <div class="ob-t"><b>现在显示的是示例工资</b><span>月薪 1.2 万、9 点到 6 点、双休。填上你自己的，钱才是按你算的，半分钟就好。</span></div>
+    <div class="ob-t"><b>现在显示的是示例工资</b><span>月薪 8000、9 点到 6 点、双休。填上你自己的，钱才是按你算的，半分钟就好。</span></div>
     <div class="ob-a"><button class="btn btn-primary" id="obGo" type="button">填我的工资</button><button class="ob-later" id="obLater" type="button">先随便看看</button></div>
   </section>
 
@@ -479,7 +479,7 @@ legend{float:left; width:100%; padding:0; font-size:13px; font-weight:600; color
         <div class="fld"><span class="lbl" id="meetNLbl">参会人数</span>
           <div class="stepper" role="group" aria-labelledby="meetNLbl"><button type="button" data-d="-1" aria-label="少一个人">−</button><input id="meetN" type="number" value="6" min="1" max="500" inputmode="numeric" aria-label="参会人数"><button type="button" data-d="1" aria-label="多一个人">+</button></div>
         </div>
-        <div class="fld"><label for="meetAvg">人均月薪（元）</label><input class="inp num" id="meetAvg" type="number" value="12000" min="0" step="500" inputmode="decimal"></div>
+        <div class="fld"><label for="meetAvg">人均月薪（元）</label><input class="inp num" id="meetAvg" type="number" value="8000" min="0" step="500" inputmode="decimal"></div>
       </div>
       <div class="meet-btns">
         <button class="btn btn-primary" id="meetToggle" type="button">开会，开始烧</button>
@@ -491,7 +491,7 @@ legend{float:left; width:100%; padding:0; font-size:13px; font-weight:600; color
   <footer class="foot">
     <p>工资按你填的上下班时间算，法定节假日和调休没算进去。退休时间按 2025 年起的渐进式延迟退休粗算，以社保部门为准。账本里的「预计」按每个工作日都上满算，填了记账开始日期才有「实际」。选「税前」时，到手是按五险一金和个税粗算的。</p>
     <p>所有数字只存在这台电脑的浏览器里，不上传。快捷键：M 摸鱼，W 如厕，P 今日账单。</p>
-    <p>班味计价器 v0.2.10 · 网页版 · <span class="sig">Made by Frank</span></p>
+    <p>班味计价器 v0.2.11 · 网页版 · <span class="sig">Made by Frank</span></p>
   </footer>
 </div>
 
@@ -743,11 +743,13 @@ const HOLI = [['2027-01-01', '元旦'], ['2027-02-06', '春节'], ['2027-04-05',
   .map(([s, n]) => ({ d: new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)), n }));
 
 /* ---------- 设置 ---------- */
-const DEF = { payType: 'month', pay: 12000, basis: 'actual', start: '09:00', end: '18:00', lunchS: '12:00', lunchE: '13:00',
+const DEF = { payType: 'month', pay: 8000, basis: 'actual', start: '09:00', end: '18:00', lunchS: '12:00', lunchE: '13:00',
   lunchPaid: false, week: 'double', bigRef: null, payday: 10, ot: 0, name: '', sound: false, unit: 0, example: true,
   tax: 'net', hf: 7, siBase: 0, special: 0, since: '', retire: false, birth: '', workStart: '', gender: 'm' };
 let cfg = Object.assign({}, DEF, store.get('bzjjq-cfg', {}));
 if (cfg.bigRef == null) cfg.bigRef = weekIdx(new Date());
+/* 还没填过工资的（示例状态），一律跟着最新的示例工资走 */
+if (cfg.example) { cfg.pay = DEF.pay; cfg.payType = DEF.payType; }
 let cache = {};
 const saveCfg = () => { store.set('bzjjq-cfg', cfg); cache = {}; };
 const unit = () => UNITS[(cfg.unit | 0) % UNITS.length];
