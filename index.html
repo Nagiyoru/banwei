@@ -74,6 +74,18 @@ button{font:inherit; color:inherit}
 .btn:hover{background:var(--fill-h)} .btn:active{transform:scale(.97)}
 .btn-primary{background:var(--blue); color:#fff} .btn-primary:hover{background:var(--blue); filter:brightness(1.08)}
 .btn-danger{background:var(--red); color:#fff} .btn-danger:hover{background:var(--red); filter:brightness(1.08)}
+/* 还在用示例工资时：设置按钮变蓝、一圈圈往外扩，示例徽标可点 */
+.btn.hot{background:var(--blue); color:#fff; animation:ring 1.8s ease-out infinite}
+.btn.hot:hover{background:var(--blue); filter:brightness(1.08)}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(0,122,255,.45)} 70%{box-shadow:0 0 0 12px rgba(0,122,255,0)} 100%{box-shadow:0 0 0 0 rgba(0,122,255,0)}}
+button.badge{border:0; font-family:inherit; cursor:pointer}
+.onboard{display:flex; align-items:center; gap:14px; background:var(--card); border:2px solid var(--blue); border-radius:20px; padding:14px 18px; margin:0 0 16px; box-shadow:var(--shadow)}
+.ob-e{font-size:30px; line-height:1; flex:none}
+.ob-t{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.ob-t b{font-size:16px} .ob-t span{font-size:13.5px; color:var(--ink2)}
+.ob-a{display:flex; align-items:center; gap:12px; flex:none}
+.ob-later{border:0; background:none; color:var(--muted); font-size:13.5px; cursor:pointer; padding:6px 2px}
+.set-intro{margin:0; font-size:14px; line-height:1.6; color:var(--ink); background:var(--card); border:1.5px solid var(--blue); border-radius:14px; padding:12px 14px}
 
 .grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px}
 .w{background:var(--card); border-radius:24px; padding:20px 22px; box-shadow:var(--shadow); min-width:0}
@@ -318,6 +330,8 @@ legend{float:left; width:100%; padding:0; font-size:13px; font-weight:600; color
   .calm-in, .meet-ctl{grid-template-columns:minmax(0,1fr)}
   .shop{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
   .mini-strong{margin-left:0}
+  .onboard{flex-wrap:wrap; padding:14px 16px}
+  .ob-a{width:100%} .ob-a .btn{flex:1}
   #dlg{align-items:flex-end; padding:0}
   #dlg .sheet{max-width:none; border-radius:22px 22px 0 0; max-height:92vh; max-height:92dvh; animation-name:sheetUp}
   #dlg .dlg-btns{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
@@ -349,11 +363,17 @@ legend{float:left; width:100%; padding:0; font-size:13px; font-weight:600; color
     </div>
     <div class="profile">
       <span id="profileText">月薪 ¥12,000 · 09:00–18:00 · 双休</span>
-      <span class="badge" id="exampleBadge">示例工资</span>
+      <button class="badge" id="exampleBadge" type="button" title="点这里填你自己的工资">示例工资</button>
       <span class="rank" id="rankBadge"></span>
-      <button class="btn" id="btnSettings" type="button">设置</button>
+      <button class="btn" id="btnSettings" type="button">⚙︎ 设置</button>
     </div>
   </header>
+
+  <section class="onboard" id="onboard" aria-label="开始使用" hidden>
+    <div class="ob-e" aria-hidden="true">👋</div>
+    <div class="ob-t"><b>现在显示的是示例工资</b><span>月薪 1.2 万、9 点到 6 点、双休。填上你自己的，钱才是按你算的，半分钟就好。</span></div>
+    <div class="ob-a"><button class="btn btn-primary" id="obGo" type="button">填我的工资</button><button class="ob-later" id="obLater" type="button">先随便看看</button></div>
+  </section>
 
   <main class="grid">
     <section class="w hero" id="hero" aria-label="今天已赚">
@@ -471,13 +491,14 @@ legend{float:left; width:100%; padding:0; font-size:13px; font-weight:600; color
   <footer class="foot">
     <p>工资按你填的上下班时间算，法定节假日和调休没算进去。退休时间按 2025 年起的渐进式延迟退休粗算，以社保部门为准。账本里的「预计」按每个工作日都上满算，填了记账开始日期才有「实际」。选「税前」时，到手是按五险一金和个税粗算的。</p>
     <p>所有数字只存在这台电脑的浏览器里，不上传。快捷键：M 摸鱼，W 如厕，P 今日账单。</p>
-    <p>班味计价器 v0.2.9 · 网页版 · <span class="sig">Made by Frank</span></p>
+    <p>班味计价器 v0.2.10 · 网页版 · <span class="sig">Made by Frank</span></p>
   </footer>
 </div>
 
 <div class="modal" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT" hidden><div class="sheet">
   <form class="dlg-in" id="setForm" novalidate>
     <div class="dlg-head"><h2 id="dlgT">设置</h2><button class="x" id="setX" type="button" aria-label="关闭">×</button></div>
+    <p class="set-intro" id="setIntro" hidden>第一次用？先填<b>「怎么算钱」</b>和<b>「上下班时间」</b>两块就够了，别的都有默认值，填完点最下面的「保存」，以后随时能改。</p>
     <fieldset>
       <legend>怎么算钱</legend>
       <div class="seg">
@@ -1095,7 +1116,8 @@ function renderSlow(st) {
     const ni = netInfo(st.d0.getMonth() + 1);
     setT(taxLine, `税前月薪 ¥${money(ni.M)}，这个月到手约 ¥${money(ni.net)} · 今天交给社保和个税 ¥${money(taxCut(st.earned, st.d0))}`);
   }
-  setT($('#earnK'), !st.wd && st.earned < 0.005 ? '今天休息' : st.phase === 'before' && st.earned < 0.005 ? '今天还没开始赚' : st.phase === 'off' ? '今天一共赚了' : '今天已经赚了');
+  const ek = !st.wd && st.earned < 0.005 ? '今天休息' : st.phase === 'before' && st.earned < 0.005 ? '今天还没开始赚' : st.phase === 'off' ? '今天一共赚了' : '今天已经赚了';
+  setT($('#earnK'), cfg.example ? ek + '（按示例工资）' : ek);
   $('#bigBtn').setAttribute('aria-label', `今天已赚 ${money(st.earned / U.p)} ${U.label}，点一下换单位`);
   const done = st.wd ? clamp(st.paidSec / workSecPerDay(), 0, 1) : 0;
   $('#ringFg').setAttribute('stroke-dashoffset', (100 - done * 100).toFixed(2));
@@ -1147,6 +1169,8 @@ function renderProfile() {
   const wl = { double: '双休', single: '单休', bigsmall: '大小周' }[cfg.week];
   setT($('#profileText'), `${tl}${cfg.tax === 'gross' ? '（税前）' : '（到手）'} ¥${(+cfg.pay).toLocaleString('zh-CN')} · ${cfg.start}–${cfg.end} · ${wl}`);
   $('#exampleBadge').hidden = !cfg.example;
+  $('#onboard').hidden = !cfg.example || obLater;
+  $('#btnSettings').classList.toggle('hot', !!cfg.example);
   const rk = myRank(), rb = $('#rankBadge');
   setT(rb, `${rk.e} ${rk.n}`);
   const tip = `牛马段位：月入${rk.range}，${rk.r}`;
@@ -1682,8 +1706,11 @@ function openSettings() {
   $('#setErr').hidden = true; clearArm = false; $('#setClear').textContent = '清空今天的记录';
   wipeArm = false; $('#setWipe').textContent = '清空全部数据';
   syncFormVis();
+  $('#setIntro').hidden = !cfg.example;
   try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+  if (cfg.example) setTimeout(() => { try { const p = $('#setPay'); p.focus({ preventScroll: true }); p.select(); } catch (e) {} }, 80);
 }
+let obLater = false;
 dlg.addEventListener('change', syncFormVis);
 dlg.addEventListener('input', e => {
   if (e.target && e.target.classList && e.target.classList.contains('bad')) { e.target.classList.remove('bad'); e.target.removeAttribute('aria-invalid'); $('#setErr').hidden = true; }
@@ -1691,6 +1718,9 @@ dlg.addEventListener('input', e => {
 });
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 $('#btnSettings').addEventListener('click', openSettings);
+$('#obGo').addEventListener('click', openSettings);
+$('#exampleBadge').addEventListener('click', openSettings);
+$('#obLater').addEventListener('click', () => { obLater = true; $('#onboard').hidden = true; toast('好，想填了就点上面蓝色的「设置」', '👌'); });
 $('#setCancel').addEventListener('click', () => dlg.close());
 $('#setX').addEventListener('click', () => dlg.close());
 $('#sinceToday').addEventListener('click', () => { $('#setSince').value = dkey(new Date()); syncFormVis(); });
